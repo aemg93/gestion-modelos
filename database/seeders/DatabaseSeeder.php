@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             PlatformsSeeder::class,
             ModelProfileSeeder::class,
+            EarningSeeder::class,
+            WorkHourSeeder::class,
         ]);
     }
 }
