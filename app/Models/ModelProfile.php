@@ -25,4 +25,10 @@ class ModelProfile extends Model
     {
         return $this->hasMany(WorkHour::class);
     }
+     public function user()
+      { 
+        return $this->belongsTo(User::class); 
+    }
+    
+
 }

@@ -15,25 +15,43 @@ class RolesAndPermissionsSeeder extends Seeder
         $admin  = Role::firstOrCreate(['name' => 'Admin']);
         $modelo = Role::firstOrCreate(['name' => 'Modelo']);
 
-        // Ejemplo de permisos
+        // Definir permisos
         $permissions = [
-            'create models',
-            'edit models',
-            'delete models',
-            'register earnings',
-            'edit earnings',
-            'create platforms',
+            'register earnings',    // registrar ganancias
+            'view own profile',     // ver su propio perfil
+            'view all profiles',    // ver todos los perfiles
+            'view work hours',      // ver horas trabajadas/faltantes
+            'create models',        // crear modelos
+            'edit models',          // editar modelos
+            'delete models',        // eliminar modelos
+            'create platforms',     // crear plataformas
+            'manage platforms',     // administrar plataformas
+            'edit earnings',        // editar ganancias
+            'delete earnings',      // eliminar ganancias
         ];
 
+        // Crear permisos en BD si no existen
         foreach ($permissions as $perm) {
-            $permission = Permission::firstOrCreate(['name' => $perm]);
-            $sAdmin->givePermissionTo($permission);
+            Permission::firstOrCreate(['name' => $perm]);
         }
 
-        // Admin solo algunos permisos
-        $admin->givePermissionTo(['create models', 'register earnings', 'create platforms']);
+        // Asignación de permisos a Modelo
+        $modelo->syncPermissions([
+            'register earnings',
+            'view own profile',
+        ]);
 
-        // Modelo solo registrar ganancias
-        $modelo->givePermissionTo(['register earnings']);
+        // Asignación de permisos a Admin
+        $admin->syncPermissions([
+            'register earnings',   // registrar ganancias de modelos
+            'view all profiles',   // ver todos los perfiles
+            'view work hours',     // ver horas trabajadas/faltantes
+            'create models',       // crear modelos
+            'create platforms',    // crear plataformas
+            'manage platforms',    // administrar plataformas
+        ]);
+
+        // Asignación de permisos a S-Admin (todos)
+        $sAdmin->syncPermissions(Permission::all());
     }
 }

@@ -1,37 +1,60 @@
 <script setup>
+import { computed } from 'vue'
+import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
+import { Bar } from 'vue-chartjs'
+
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
+
 const props = defineProps({
-  data: { type: Array, required: true }
+  data: { type: Array, required: true },
+  mode: { type: String, default: 'absolute' },
+  title: { type: String, default: 'Ganancias por fecha' }
 })
 
-import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement } from 'chart.js'
-import { Line } from 'vue-chartjs'
+const META = 1000 // meta ejemplo para porcentajes
 
-// Registramos los módulos para línea
-ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement)
-
-const META = 1000
-
-const chartData = {
+const chartData = computed(() => ({
   labels: (props.data || []).map(item => item.date),
   datasets: [
     {
-      label: 'Ganancias',
-      data: (props.data || []).map(item => parseFloat(item.amount)),
-      borderColor: 'blue',
-      backgroundColor: 'lightblue',
-      tension: 0.3
-    },
-    {
-      label: 'Ganancias restantes',
-      data: (props.data || []).map(item => META - parseFloat(item.amount)),
-      borderColor: 'red',
-      backgroundColor: 'pink',
-      tension: 0.3
+      label: props.mode === 'percent' ? 'Ganancias (%)' : 'Ganancias ($)',
+      data: (props.data || []).map(item => {
+        return props.mode === 'percent'
+          ? ((item.amount / META) * 100).toFixed(2)
+          : item.amount
+      }),
+      backgroundColor: '#10b981'
     }
   ]
-}
+}))
+
+const chartOptions = computed(() => ({
+  responsive: true,
+  plugins: {
+    legend: { position: 'bottom' },
+    title: { display: true, text: props.title },
+    tooltip: {
+      callbacks: {
+        label: function(context) {
+          return props.mode === 'percent' ? context.raw + '%' : '$' + context.raw
+        }
+      }
+    }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      max: props.mode === 'percent' ? 100 : undefined,
+      ticks: {
+        callback: function(value) {
+          return props.mode === 'percent' ? value + '%' : '$' + value
+        }
+      }
+    }
+  }
+}))
 </script>
 
 <template>
-  <Line :data="chartData" />
+  <Bar :data="chartData" :options="chartOptions" />
 </template>

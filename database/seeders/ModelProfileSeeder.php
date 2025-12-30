@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\User;
 use App\Models\ModelProfile;
 use App\Models\Platform;
 use App\Models\Earning;
@@ -12,48 +13,54 @@ class ModelProfileSeeder extends Seeder
 {
     public function run(): void
     {
-        // Crear algunos perfiles de modelos
-        $model1 = ModelProfile::create([
-            'name' => 'Ana Torres',
-            'nickname' => 'AnaStar',
-            'email' => 'ana@example.com',
-        ]);
+        $models = [
+            ['name' => 'Ana Torres', 'nickname' => 'AnaStar', 'email' => 'ana@example.com'],
+            ['name' => 'Laura Gómez', 'nickname' => 'LauG', 'email' => 'laura@example.com'],
+            ['name' => 'Maria Melendis', 'nickname' => 'Maria', 'email' => 'maria@example.com'],
+            ['name' => 'Dayana Martines', 'nickname' => 'Dayana', 'email' => 'dayana@example.com'],
+        ];
 
-        $model2 = ModelProfile::create([
-            'name' => 'Laura Gómez',
-            'nickname' => 'LauG',
-            'email' => 'laura@example.com',
-        ]);
-
-        // Vincularlos a plataformas existentes
         $platforms = Platform::all();
-        $model1->platforms()->attach($platforms->pluck('id')->random(2));
-        $model2->platforms()->attach($platforms->pluck('id')->random(2));
 
-        // Crear ingresos de prueba
-        Earning::create([
-            'model_profile_id' => $model1->id,
-            'amount' => 150.50,
-            'date' => now()->subDays(2),
-        ]);
+        foreach ($models as $data) {
+            // Crear usuario
+            $user = User::firstOrCreate(
+                ['email' => $data['email']],
+                [
+                    'name' => $data['name'],
+                    'password' => bcrypt('password'),
+                ]
+            );
+            $user->assignRole('Modelo');
 
-        Earning::create([
-            'model_profile_id' => $model2->id,
-            'amount' => 200.00,
-            'date' => now()->subDay(),
-        ]);
+            // Crear perfil y asociar usuario
+            $profile = ModelProfile::firstOrCreate(
+                ['email' => $data['email']],
+                [
+                    'name' => $data['name'],
+                    'nickname' => $data['nickname'],
+                ]
+            );
+            $profile->user()->associate($user);
+            $profile->save();
 
-        // Crear horas de trabajo de prueba
-        WorkHour::create([
-            'model_profile_id' => $model1->id,
-            'date' => now()->subDays(2),
-            'hours' => 5,
-        ]);
+            // Vincular plataformas aleatorias
+            if ($platforms->count() > 0) {
+                $profile->platforms()->sync($platforms->pluck('id')->random(min(2, $platforms->count())));
+            }
 
-        WorkHour::create([
-            'model_profile_id' => $model2->id,
-            'date' => now()->subDay(),
-            'hours' => 6,
-        ]);
+            // Crear ingresos y horas de prueba
+            Earning::create([
+                'model_profile_id' => $profile->id,
+                'amount' => rand(100, 300),
+                'date' => now()->subDays(rand(1, 5)),
+            ]);
+
+            WorkHour::create([
+                'model_profile_id' => $profile->id,
+                'date' => now()->subDays(rand(1, 5)),
+                'hours' => rand(4, 8),
+            ]);
+        }
     }
 }

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');                 // Nombre real o artístico
             $table->string('nickname')->nullable(); // Apodo opcional
             $table->string('email')->unique()->nullable(); // Email único, puede ser nulo
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();                   // created_at y updated_at
         });
     }

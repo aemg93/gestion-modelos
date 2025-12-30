@@ -17,7 +17,7 @@ class Earning extends Model
         'date',
     ];
 
-    // Relación con ModelProfile
+  
     public function modelProfile()
     {
         return $this->belongsTo(ModelProfile::class);
